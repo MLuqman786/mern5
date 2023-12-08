@@ -3,8 +3,8 @@ import express from "express";
 import sequelize, { connectDB } from "./db/config.js";
 import dbInit from "./db/init.js";
 import AllRouter from "./router/main.js";
-import session from "express-session";
-import sequelizeStore from "connect-session-sequelize";
+import Session from "express-session";
+import SequelizeStore from "connect-session-sequelize";
 
 import AuthenticateMiddleware from "./middleware/authenticate.js";
 import multer from "multer";
@@ -16,10 +16,21 @@ const app = express();
 
 connectDB();
 
-// const mySequelizeStore = sequelizeStore();
-// const mySequelizeStoreNew = new mySequelizeStore({
-//   db: sequelize,
-// });
+const mySequelizeStore = SequelizeStore(Session.Store);
+const mySequelizeStore1 = new mySequelizeStore({
+  db: sequelize,
+});
+
+app.use(
+  Session({
+    secret: "lanskjagsfjhgsdjhgf",
+    Store: mySequelizeStore1,
+    saveUninitialized: false,
+    resave: true, // we support the touch method so per the express-session docs this should be set to false
+    proxy: false, // if you do SSL outside of node.
+  })
+);
+mySequelizeStore1.sync();
 
 dbInit()
   .then(() => console.log("DB sync"))
